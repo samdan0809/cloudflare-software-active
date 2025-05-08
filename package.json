@@ -1,0 +1,11 @@
+{
+  "name": "cloudflare-software-active",
+  "version": "1.0.0",
+  "description": "部署在cloudflare workers的一项服务",
+  "main": "worker-copy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
