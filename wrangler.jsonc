@@ -1,6 +1,6 @@
 {
     
-    "name": "software-license",
+    "name": "colorbook",
     "compatibility_date": "2025-05-08",
     "main": "worker.js",
     "type": "javascript",
