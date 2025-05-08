@@ -109,7 +109,7 @@
                         window.location.href = '/login';
                     }
                 },
-                async loadKeys() {
+                async loadKeys(cursor = null) {
                     const token = localStorage.getItem('token');
                     try {
                         const response = await fetch('/manage', {
@@ -128,7 +128,10 @@
                             })
                         });
                         if (response.ok) {
-                            this.licenseKeys = await response.json();
+                            const data = await response.json();
+                            this.licenseKeys = data.keys;
+                            this.prevCursor = cursor;
+                            this.nextCursor = data.cursor;
                         } else {
                             console.error('Failed to load keys');
                         }

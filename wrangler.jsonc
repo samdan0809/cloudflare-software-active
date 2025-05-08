@@ -4,6 +4,14 @@
     "compatibility_date": "2025-05-08",
     "main": "worker.js",
     "type": "javascript",
+    "env": {
+        "username": "admin",
+        "password": "1"
+    },
+    "durable_objects": {
+        "name": "colorbook",
+        "class_name": "ColorBook"
+    },
     "kv_namespaces": [
         {
         "binding": "SOFTWARE_LICENSE_KV",
