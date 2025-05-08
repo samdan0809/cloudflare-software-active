@@ -157,23 +157,7 @@
                 },
                 async searchKeys() {
                     await this.loadKeys();
-                },
-                async prevPage() {
-                    if (this.prevCursor) {
-                        this.currentPage--;
-                        await this.loadKeys(this.prevCursor);
-                    }
-
-                        } else {
-                            console.error('Failed to load keys');
-                        }
-                    } catch (error) {
-                        console.error('Error loading keys:', error);
-                    }
-                },
-                async searchKeys() {
-                    await this.loadKeys();
-                },
+                }, 
                 async prevPage() {
                     if (this.prevCursor) {
                         this.currentPage--;
