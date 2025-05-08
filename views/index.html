@@ -47,6 +47,7 @@
             </tbody>
         </table>
         <div class="flex justify-center mt-4">
+            Total:{{total}} 
             <button @click="prevPage" :disabled="currentPage === 1" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
                 Previous
             </button>
@@ -70,7 +71,9 @@
                     searchToken: '',
 
                     currentPage: 1,
+                    totalPages:0,
                     pageSize: 10,
+                    total:0,
                     prevCursor: null,
                     nextCursor: null,
                     isActivated: '',
@@ -141,6 +144,26 @@
                             this.licenseKeys = data.keys;
                             this.prevCursor = cursor;
                             this.nextCursor = data.cursor;
+                            this.total=data.total;
+
+                            this.totalPages = Math.ceil(data.total / this.pageSize);
+
+                        } else {
+                            console.error('Failed to load keys');
+                        }
+                    } catch (error) {
+                        console.error('Error loading keys:', error);
+                    }
+                },
+                async searchKeys() {
+                    await this.loadKeys();
+                },
+                async prevPage() {
+                    if (this.prevCursor) {
+                        this.currentPage--;
+                        await this.loadKeys(this.prevCursor);
+                    }
+
                         } else {
                             console.error('Failed to load keys');
                         }
@@ -201,7 +224,8 @@
                             body: new URLSearchParams({ action: 'deleteKey', deleteKey: key })
                         });
                         if (response.ok) {
-                            this.licenseKeys = this.licenseKeys.filter(k => k!== key);
+                            this.loadKeys();
+
                         }
                     } catch (error) {
                         console.error('Error deleting key:', error);
