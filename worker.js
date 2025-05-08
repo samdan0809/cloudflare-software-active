@@ -189,10 +189,10 @@ async function handleManageRequest(request, env) {
                 });
 
                 //排除登录的键
-                keyList = keyList.filter(key => !key.includes(LOGIN_TOKENS_KEY));
+                keyList = keyList.filter(key => !key.key.includes(LOGIN_TOKENS_KEY));
 
                 if (searchToken) {
-                    keyList = keyList.filter(key => key.includes(searchToken));
+                    keyList = keyList.filter(key => key.key.includes(searchToken));
                 }
 
 
