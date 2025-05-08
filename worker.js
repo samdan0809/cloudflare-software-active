@@ -156,6 +156,8 @@ async function handleManageRequest(request, env) {
         const verifyToken = formData.get('verifyToken');
         const batchCount = formData.get('batchCount');
         const searchToken = formData.get('searchToken');
+        const page = parseInt(formData.get('page')) || 1;
+        const pageSize = parseInt(formData.get('pageSize')) || 10;
 
         //验证toKen 是否有效
         if (verifyToken) {
@@ -177,7 +179,14 @@ async function handleManageRequest(request, env) {
                 }
                
                 const keys = await env.SOFTWARE_LICENSE_KV.list();
-                let keyList = keys.keys.map(key => key.name);
+                let keyList = keys.keys.map(async key => {
+                    const value = await env.SOFTWARE_LICENSE_KV.get(key.name);
+                    return {
+                        key: key.name,
+                        isActivated: value == '1'?false:true,
+                        
+                    };
+                });
 
                 //排除登录的键
                 keyList = keyList.filter(key => !key.includes(LOGIN_TOKENS_KEY));
@@ -187,7 +196,13 @@ async function handleManageRequest(request, env) {
                 }
 
 
-                return new Response(JSON.stringify(keyList), {
+                const startIndex = (page - 1) * pageSize;
+                const endIndex = startIndex + pageSize;
+                const paginatedKeys = keyList.slice(startIndex, endIndex);
+
+                return new Response(JSON.stringify({
+                    keys: paginatedKeys, total: keyList.length
+                }), {
                     headers: JSON_HEADER
                 });
   

@@ -30,18 +30,31 @@
             <thead>
                 <tr>
                     <th class="border border-gray-300 p-2">Key</th>
+                    <th class="border border-gray-300 p-2">Is Activated</th>
                     <th class="border border-gray-300 p-2">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="key in licenseKeys" :key="key">
                     <td class="border border-gray-300 p-2">{{ key }}</td>
+                    <td class="border border-gray-300 p-2">{{ key.isActivated? 'Yes' : 'No' }}</td>
                     <td class="border border-gray-300 p-2">
                         <button @click="deleteKey(key)" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded">Delete</button>
                     </td>
                 </tr>
             </tbody>
         </table>
+        <div class="flex justify-center mt-4">
+            <button @click="prevPage" :disabled="currentPage === 1" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
+                Previous
+            </button>
+            <span class="bg-gray-200 text-gray-800 font-bold py-2 px-4">
+                Page {{ currentPage }} of {{ totalPages }}
+            </span>
+            <button @click="nextPage" :disabled="currentPage === totalPages" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
+                Next
+            </button>
+        </div>
     </div>
     <script>
         const { createApp } = Vue;
@@ -52,7 +65,12 @@
                     licenseKeys: [],
                     batchCount: 1,
                     newlyGeneratedKeys: [],
-                    searchToken: ''
+                    searchToken: '',
+
+                    currentPage: 1,
+                    pageSize: 30,
+                    totalPages: 1,
+
                 };
             },
             computed: {
@@ -99,7 +117,7 @@
                                 'Content-Type': 'application/x-www-form-urlencoded',
                                 'Authorization': `Bearer ${token}`
                             },
-                            body: new URLSearchParams({ action: 'getKeys' })
+                            body: new URLSearchParams({ action: 'getKeys' , searchToken: this.searchToken})
                         });
                         if (response.ok) {
                             this.licenseKeys = await response.json();
@@ -108,6 +126,21 @@
                         }
                     } catch (error) {
                         console.error('Error loading keys:', error);
+                    }
+                },
+                async searchKeys() {
+                    await this.loadKeys();
+                },
+                async prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        await this.loadKeys();
+                    }
+                },
+                async nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                        await this.loadKeys();
                     }
                 },
                 async batchGenerateKeys() {
@@ -149,26 +182,6 @@
                         }
                     } catch (error) {
                         console.error('Error deleting key:', error);
-                    }
-                },
-                async searchKeys() {
-                    const token = localStorage.getItem('token');
-                    try {
-                        const response = await fetch('/manage', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: new URLSearchParams({ action: 'getKeys', searchToken: this.searchToken })
-                        });
-                        if (response.ok) {
-                            this.licenseKeys = await response.json();
-                        } else {
-                            console.error('Failed to search keys');
-                        }
-                    } catch (error) {
-                        console.error('Error searching keys:', error);
                     }
                 }
             },
