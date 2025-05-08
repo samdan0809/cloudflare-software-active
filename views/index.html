@@ -31,13 +31,15 @@
                 <tr>
                     <th class="border border-gray-300 p-2">Key</th>
                     <th class="border border-gray-300 p-2">Is Activated</th>
+                    <th class="border border-gray-300 p-2">activationTime</th>
                     <th class="border border-gray-300 p-2">Action</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="key in licenseKeys" :key="key">
-                    <td class="border border-gray-300 p-2">{{ key }}</td>
+                    <td class="border border-gray-300 p-2">{{ key.key }}</td>
                     <td class="border border-gray-300 p-2">{{ key.isActivated? 'Yes' : 'No' }}</td>
+                    <td class="border border-gray-300 p-2">{{ key.activationTime }}</td>
                     <td class="border border-gray-300 p-2">
                         <button @click="deleteKey(key.key)" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded">Delete</button>
                     </td>
