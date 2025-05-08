@@ -7,7 +7,7 @@ var VALID_USERNAME = '';
 var VALID_PASSWORD = '';
 const TOKEN_EXPIRATION_TIME = 3600 * 4; // 4 小时，单位为秒
 const JSON_HEADER={ 'Content-Type': 'application/json' };
-
+const LOGIN_TOKENS_KEY = 'tokens';
 // 定义路由映射
 const routes = {
     '/verify': {
@@ -45,7 +45,7 @@ function withAuthentication(handler) {
             return new Response('Unauthorized', { status: 401 });
         }
         const token = authHeader.replace('Bearer ', '');
-        const storedTokens = await env.SOFTWARE_LICENSE_KV.get('tokens');
+        const storedTokens = await env.SOFTWARE_LICENSE_KV.get(LOGIN_TOKENS_KEY);
         const parsedTokens = storedTokens ? JSON.parse(storedTokens) : [];
         const validToken = parsedTokens.find(t => t.token === token && t.expiration > Date.now() / 1000);
         if (!validToken) {
@@ -105,7 +105,7 @@ async function handleLogin(request, env) {
             const loginTime = Date.now() / 1000;
             const expiration = loginTime + TOKEN_EXPIRATION_TIME;
 
-            const storedTokens = await env.SOFTWARE_LICENSE_KV.get('tokens');
+            const storedTokens = await env.SOFTWARE_LICENSE_KV.get(LOGIN_TOKENS_KEY);
             const parsedTokens = storedTokens ? JSON.parse(storedTokens) : [];
 
             // 清理过期的 token
@@ -119,7 +119,7 @@ async function handleLogin(request, env) {
 
             parsedTokens.push(newTokenObj);
 
-            await env.SOFTWARE_LICENSE_KV.put('tokens', JSON.stringify(parsedTokens));
+            await env.SOFTWARE_LICENSE_KV.put(LOGIN_TOKENS_KEY, JSON.stringify(parsedTokens));
 
             return new Response(JSON.stringify({ token }), {
                 status: 200,
@@ -157,8 +157,9 @@ async function handleManageRequest(request, env) {
         const batchCount = formData.get('batchCount');
         const searchToken = formData.get('searchToken');
 
+        //验证toKen 是否有效
         if (verifyToken) {
-            const storedTokens = await env.SOFTWARE_LICENSE_KV.get('tokens');
+            const storedTokens = await env.SOFTWARE_LICENSE_KV.get(LOGIN_TOKENS_KEY);
             const parsedTokens = storedTokens ? JSON.parse(storedTokens) : [];
             const validToken = parsedTokens.find(t => t.token === verifyToken && t.expiration > Date.now() / 1000);
             if (validToken) {
@@ -177,6 +178,9 @@ async function handleManageRequest(request, env) {
                
                 const keys = await env.SOFTWARE_LICENSE_KV.list();
                 let keyList = keys.keys.map(key => key.name);
+
+                //排除登录的键
+                keyList = keyList.filter(key => !key.includes(LOGIN_TOKENS_KEY));
 
                 if (searchToken) {
                     keyList = keyList.filter(key => key.includes(searchToken));
