@@ -199,7 +199,8 @@ async function handleManageRequest(request, env) {
                 });
                 keyList = await Promise.all(keyList);
 
-  
+                
+                keyList=keyList.filter(key => !key.key.startsWith('tokens'));
  
                 return new Response(JSON.stringify({
                     keys: keyList,

@@ -39,7 +39,7 @@
                     <td class="border border-gray-300 p-2">{{ key }}</td>
                     <td class="border border-gray-300 p-2">{{ key.isActivated? 'Yes' : 'No' }}</td>
                     <td class="border border-gray-300 p-2">
-                        <button @click="deleteKey(key)" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded">Delete</button>
+                        <button @click="deleteKey(key.key)" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded">Delete</button>
                     </td>
                 </tr>
             </tbody>
@@ -185,6 +185,9 @@
                     }
                 },
                 async deleteKey(key) {
+                    if (!confirm(`Are you sure you want to delete the key ${key}?`)) {
+                        return;
+                    }
                     try {
                         const token = localStorage.getItem('token');
                         const response = await fetch('/manage', {
