@@ -158,6 +158,7 @@ async function handleManageRequest(request, env) {
         const searchToken = formData.get('searchToken');
         const page = parseInt(formData.get('page')) || 1;
         const pageSize = parseInt(formData.get('pageSize')) || 10;
+        const cursor = formData.get('cursor');
 
         //验证toKen 是否有效
         if (verifyToken) {
@@ -177,31 +178,33 @@ async function handleManageRequest(request, env) {
                     console.error('SOFTWARE_LICENSE_KV is undefined in env');
                     return new Response('KV namespace is not properly configured', { status: 500 });
                 }
+
+                const listOptions = {
+                    limit: pageSize,
+                    cursor: cursor
+                };
+
+                if (searchToken) {
+                    listOptions.prefix = searchToken;
+                }
                
-                const keys = await env.SOFTWARE_LICENSE_KV.list();
-                let keyList = keys.keys.map(async key => {
+                const keysResult = await env.SOFTWARE_LICENSE_KV.list(listOptions);
+                let keyList = keysResult.keys.map(async key => {
                     const value = await env.SOFTWARE_LICENSE_KV.get(key.name);
                     return {
                         key: key.name,
-                        isActivated: value == '1'?false:true,
-                        
+                        isActivated: value === 'valid',
+                        activationTime: value === 'valid'? new Date().getTime() : null
                     };
                 });
+                keyList = await Promise.all(keyList);
 
-                //排除登录的键
-                keyList = keyList.filter(key => !key.key.includes(LOGIN_TOKENS_KEY));
-
-                if (searchToken) {
-                    keyList = keyList.filter(key => key.key.includes(searchToken));
-                }
-
-
-                const startIndex = (page - 1) * pageSize;
-                const endIndex = startIndex + pageSize;
-                const paginatedKeys = keyList.slice(startIndex, endIndex);
-
+  
+ 
                 return new Response(JSON.stringify({
-                    keys: paginatedKeys, total: keyList.length
+                    keys: keyList,
+                    total: keysResult.list_complete? keysResult.keys.length : null,
+                    cursor: keysResult.cursor
                 }), {
                     headers: JSON_HEADER
                 });
