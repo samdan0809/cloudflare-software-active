@@ -1,8 +1,13 @@
 {
+    
+    "name": "software-license",
+    "compatibility_date": "2025-05-08",
+    "main": "worker.js",
+    "type": "javascript",
     "kv_namespaces": [
-      {
+        {
         "binding": "SOFTWARE_LICENSE_KV",
         "id": "88752ca54ba4456891fafdaf79f26829"
-      }
+        }
     ]
   }
