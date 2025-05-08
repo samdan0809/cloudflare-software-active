@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <title>Login</title>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-8 flex justify-center items-center h-screen">
+        <form id="loginForm" class="bg-white p-8 rounded shadow-md">
+            <h2 class="text-2xl font-bold mb-4">Login</h2>
+            <input type="text" value="admin" id="username" placeholder="Username" class="border border-gray-300 p-2 mb-2 w-full rounded">
+            <input type="password" value="1" id="password" placeholder="Password" class="border border-gray-300 p-2 mb-4 w-full rounded">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white p-2 w-full rounded">Login</button>
+        </form>
+    </div>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ username, password })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                window.location.href = '/manage';
+            } else {
+                alert('Invalid username or password');
+            }
+        });
+    </script>
+</body>
+</html>    

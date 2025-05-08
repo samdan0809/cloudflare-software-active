@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <title>KV Management</title>
+</head>
+
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto p-8">
+        <h1 class="text-2xl font-bold mb-4">KV Management</h1>
+        <h2 class="text-xl font-semibold mb-2">Batch Generate License Keys</h2>
+        <input v-model="batchCount" type="number" placeholder="Enter batch count" class="border border-gray-300 p-2 mr-2 rounded">
+        <button @click="batchGenerateKeys" class="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded">Generate</button>
+        <div v-if="newlyGeneratedKeys.length > 0" class="mt-4">
+            <h2 class="text-xl font-semibold mb-2">Newly Generated Keys</h2>
+            <ul class="list-disc pl-4">
+                <li v-for="key in newlyGeneratedKeys" :key="key">{{ key }}</li>
+            </ul>
+        </div>
+         <h2 class="text-xl font-semibold mb-2">Search Token</h2>
+        <input v-model="searchToken" type="text" placeholder="Search token" class="border border-gray-300 p-2 mr-2 rounded">
+        <button @click="searchKeys" class="bg-green-500 hover:bg-green-600 text-white p-2 rounded">Search</button>
+        <h2 class="text-xl font-semibold mb-2">Existing License Keys</h2>
+        <table class="table-auto w-full border-collapse border border-gray-300">
+            <thead>
+                <tr>
+                    <th class="border border-gray-300 p-2">Key</th>
+                    <th class="border border-gray-300 p-2">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="key in licenseKeys" :key="key">
+                    <td class="border border-gray-300 p-2">{{ key }}</td>
+                    <td class="border border-gray-300 p-2">
+                        <button @click="deleteKey(key)" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded">Delete</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                  
+                    licenseKeys: [],
+                    batchCount: 1,
+                    newlyGeneratedKeys: [],
+                    searchToken: ''
+                };
+            },
+            computed: {
+                filteredLicenseKeys() {
+                    if (!this.searchToken) {
+                        return this.licenseKeys;
+                    }
+                    return this.licenseKeys.filter(key => key.includes(this.searchToken));
+                }
+            },
+            methods: {
+            
+                async verifyToken() {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    try {
+                        const response = await fetch('/manage', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: new URLSearchParams({ verifyToken: token })
+                        });
+                        if (!response.ok) {
+                            localStorage.removeItem('token');
+                            window.location.href = '/login';
+                        }
+                    } catch (error) {
+                        console.error('Error verifying token:', error);
+                        localStorage.removeItem('token');
+                        window.location.href = '/login';
+                    }
+                },
+                async loadKeys() {
+                    const token = localStorage.getItem('token');
+                    try {
+                        const response = await fetch('/manage', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: new URLSearchParams({ action: 'getKeys' })
+                        });
+                        if (response.ok) {
+                            this.licenseKeys = await response.json();
+                        } else {
+                            console.error('Failed to load keys');
+                        }
+                    } catch (error) {
+                        console.error('Error loading keys:', error);
+                    }
+                },
+                async batchGenerateKeys() {
+                    if (this.batchCount > 0) {
+                        try {
+                            const token = localStorage.getItem('token');
+                            const response = await fetch('/manage', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: new URLSearchParams({ action: 'batchGenerate', batchCount: this.batchCount })
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                this.newlyGeneratedKeys = data.keys;
+                                await this.loadKeys();
+                                this.batchCount = 1;
+                            }
+                        } catch (error) {
+                            console.error('Error generating batch keys:', error);
+                        }
+                    }
+                },
+                async deleteKey(key) {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch('/manage', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: new URLSearchParams({ action: 'deleteKey', deleteKey: key })
+                        });
+                        if (response.ok) {
+                            this.licenseKeys = this.licenseKeys.filter(k => k!== key);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting key:', error);
+                    }
+                },
+                async searchKeys() {
+                    const token = localStorage.getItem('token');
+                    try {
+                        const response = await fetch('/manage', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: new URLSearchParams({ action: 'getKeys', searchToken: this.searchToken })
+                        });
+                        if (response.ok) {
+                            this.licenseKeys = await response.json();
+                        } else {
+                            console.error('Failed to search keys');
+                        }
+                    } catch (error) {
+                        console.error('Error searching keys:', error);
+                    }
+                }
+            },
+            async mounted() {
+                await this.verifyToken();
+                await this.loadKeys();
+            }
+        }).mount('#app');
+    </script>
+</body>
+
+</html>    
